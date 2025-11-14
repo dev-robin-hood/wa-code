@@ -1,0 +1,23 @@
+{
+  "name": "wa-code",
+  "version": "1.0.0",
+  "description": "Download minified JavaScript resources from WhatsApp Web",
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.2.1",
+    "@types/chrome": "^0.0.268",
+    "@types/jszip": "^3.4.0",
+    "typescript": "^5.4.5",
+    "vite": "^7.2.2"
+  },
+  "author": "dev-robin-hood",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "jszip": "^3.10.1"
+  }
+}
