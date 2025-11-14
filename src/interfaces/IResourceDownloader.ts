@@ -16,6 +16,12 @@
 
 import { DownloadResult } from '../types/download.js';
 
+export type DownloadProgressCallback = (stage: 'downloading' | 'formatting') => void;
+
 export interface IResourceDownloader {
-  download(url: string): Promise<DownloadResult>;
+  download(
+    url: string,
+    shouldFormat: boolean,
+    onProgress?: DownloadProgressCallback
+  ): Promise<DownloadResult & { wasFormatted: boolean }>;
 }

@@ -15,11 +15,11 @@
  */
 
 export interface IZipLibrary {
-  file(filename: string, data: Blob): void;
-  generateAsync(options: {
-    type: 'blob';
-    compression: string;
-    compressionOptions: { level: number };
+  file(filename: string, data: Blob | string): void;
+  generateAsync(options?: {
+    type?: 'blob';
+    compression?: string;
+    compressionOptions?: { level: number };
   }): Promise<Blob>;
 }
 

@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
-import { DownloadProgress, DownloadStatistics } from '../types/download.js';
-import { FileStatus } from '../types/messages.js';
+import { FormattingPreferences } from '../types/formatting.js';
 
-export interface IMessageBroker {
-  sendFileStatus(url: string, filename: string, status: FileStatus): void;
-  sendProgress(progress: DownloadProgress, info: string): void;
-  sendCompletion(statistics: DownloadStatistics): void;
-  sendError(error: string): void;
+export interface IPreferencesManager {
+  getFormattingPreferences(): Promise<FormattingPreferences>;
+  setFormattingPreferences(preferences: FormattingPreferences): Promise<void>;
 }
