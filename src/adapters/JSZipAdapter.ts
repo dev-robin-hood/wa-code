@@ -20,19 +20,19 @@ import JSZip from 'jszip';
 class JSZipAdapter implements IZipLibrary {
   constructor(private readonly instance: JSZip) {}
 
-  file(filename: string, data: Blob): void {
+  file(filename: string, data: Blob | string): void {
     this.instance.file(filename, data);
   }
 
-  async generateAsync(options: {
-    type: 'blob';
-    compression: string;
-    compressionOptions: { level: number };
+  async generateAsync(options?: {
+    type?: 'blob';
+    compression?: string;
+    compressionOptions?: { level: number };
   }): Promise<Blob> {
     return await this.instance.generateAsync({
-      type: options.type,
-      compression: options.compression as 'DEFLATE',
-      compressionOptions: options.compressionOptions,
+      type: 'blob',
+      compression: options?.compression as 'DEFLATE' | undefined,
+      compressionOptions: options?.compressionOptions,
     });
   }
 }

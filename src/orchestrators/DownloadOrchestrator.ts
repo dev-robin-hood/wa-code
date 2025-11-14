@@ -19,14 +19,23 @@ import { IResourceDownloader } from '../interfaces/IResourceDownloader.js';
 import { IZipBuilder } from '../interfaces/IZipBuilder.js';
 import { IMessageBroker } from '../interfaces/IMessageBroker.js';
 import { DownloadError, DownloadProgress } from '../types/download.js';
+import { truncateFilename } from '../utils/stringUtils.js';
+import { PromisePool, PromisePoolTask } from '../utils/PromisePool.js';
+import { DEFAULT_CONCURRENCY_LIMIT } from '../types/concurrency.js';
 
 export class DownloadOrchestrator {
+  private readonly concurrencyLimit: number;
+
   constructor(
     private readonly scanner: IResourceScanner,
     private readonly downloader: IResourceDownloader,
     private readonly zipBuilder: IZipBuilder,
-    private readonly messageBroker: IMessageBroker
-  ) {}
+    private readonly messageBroker: IMessageBroker,
+    private readonly shouldFormat: boolean,
+    concurrencyLimit?: number
+  ) {
+    this.concurrencyLimit = concurrencyLimit ?? DEFAULT_CONCURRENCY_LIMIT;
+  }
 
   async execute(): Promise<void> {
     try {
@@ -45,37 +54,67 @@ export class DownloadOrchestrator {
     const resources = this.scanner.scan();
     const total = resources.length;
 
+    let completedCount = 0;
     let successCount = 0;
     let errorCount = 0;
 
-    for (let index = 0; index < resources.length; index++) {
-      const url = resources[index];
+    const pool = new PromisePool<void>(this.concurrencyLimit);
 
-      try {
-        const result = await this.downloader.download(url);
+    const tasks: PromisePoolTask<void>[] = resources.map((url) => ({
+      execute: async () => {
+        const filename = this.extractFilenameFromUrl(url);
+
+        const result = await this.downloader.download(
+          url,
+          this.shouldFormat,
+          (stage) => {
+            const status = stage === 'downloading' ? 'downloading' : 'formatting';
+            this.messageBroker.sendFileStatus(url, filename, status as 'downloading' | 'formatting');
+
+            const stageLabel = stage === 'downloading' ? 'Downloading' : 'Formatting';
+            this.reportProgress({
+              current: completedCount,
+              total,
+              successCount,
+              errorCount,
+              info: `${stageLabel}: ${truncateFilename(filename)}`,
+            });
+          }
+        );
+
         this.zipBuilder.addFile(result);
+        completedCount++;
         successCount++;
 
+        this.messageBroker.sendFileStatus(url, result.filename, 'done');
+
+        const statusSuffix = result.wasFormatted ? ' ✓' : '';
         this.reportProgress({
-          current: index + 1,
+          current: completedCount,
           total,
           successCount,
           errorCount,
-          info: `Downloaded: ${result.filename}`,
+          info: `Done: ${truncateFilename(result.filename)}${statusSuffix}`,
         });
-      } catch (error) {
+      },
+      onError: () => {
+        completedCount++;
         errorCount++;
 
+        const filename = this.extractFilenameFromUrl(url);
+        this.messageBroker.sendFileStatus(url, filename, 'failed');
+
         this.reportProgress({
-          current: index + 1,
+          current: completedCount,
           total,
           successCount,
           errorCount,
-          info: `Failed: ${this.extractFilenameFromUrl(url)}`,
+          info: `Failed: ${truncateFilename(filename)}`,
         });
-      }
-    }
+      },
+    }));
 
+    await pool.execute(tasks);
     await this.finalizeDownload(total, successCount, errorCount);
   }
 
