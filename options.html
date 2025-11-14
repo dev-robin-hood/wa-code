@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>wa-code</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: #2A3038;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: #3D4451;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 700px;
+      padding: 32px;
+      border: 1px solid #4A5260;
+    }
+
+    header {
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      color: #FFFFFF;
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      letter-spacing: -0.4px;
+    }
+
+    .subtitle {
+      color: #B8C1CC;
+      font-size: 13px;
+      font-weight: 400;
+    }
+
+    .warning {
+      background: #4A4020;
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #F5D89A;
+      line-height: 1.5;
+      border: 1px solid #5A5030;
+    }
+
+    .warning strong {
+      font-weight: 600;
+      color: #FFE4B3;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: #4CAF79;
+      color: #FFFFFF;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #3D8F61;
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    .btn-primary:disabled {
+      background: #5A6270;
+      color: #8A93A0;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .checkbox-container input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: #6FCF97;
+    }
+
+    .checkbox-container label {
+      font-size: 13px;
+      color: #D1D8E0;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .status {
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      display: none;
+      border: 1px solid;
+    }
+
+    .status.active {
+      display: block;
+    }
+
+    .status.info {
+      background: #2F3D52;
+      color: #A8C7F0;
+      border-color: #3D5070;
+    }
+
+    .status.success {
+      background: #2D4438;
+      color: #B3E6CC;
+      border-color: #3D5848;
+    }
+
+    .status.error {
+      background: #4A2F35;
+      color: #FFB0B0;
+      border-color: #5A3F45;
+    }
+
+    .progress-container {
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .progress-container.active {
+      display: block;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #2A3038;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #4CAF79;
+      width: 0%;
+      transition: width 0.2s ease;
+    }
+
+    .progress-stats {
+      display: flex;
+      gap: 20px;
+      font-size: 12px;
+      color: #8A93A0;
+    }
+
+    .stat-label {
+      font-weight: 500;
+      color: #B8C1CC;
+    }
+
+    .stat-value {
+      font-weight: 600;
+      color: #E8EEF2;
+      margin-left: 4px;
+    }
+
+    .file-list {
+      max-height: 350px;
+      overflow-y: auto;
+      border: 1px solid #4A5260;
+      border-radius: 6px;
+      background: #2A3038;
+      display: none;
+    }
+
+    .file-list.active {
+      display: block;
+    }
+
+    .file-list::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .file-list::-webkit-scrollbar-track {
+      background: #2A3038;
+    }
+
+    .file-list::-webkit-scrollbar-thumb {
+      background: #5A6270;
+      border-radius: 4px;
+    }
+
+    .file-list::-webkit-scrollbar-thumb:hover {
+      background: #6B7380;
+    }
+
+    .file-item {
+      padding: 10px 14px;
+      border-bottom: 1px solid #4A5260;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      background: #3D4451;
+      transition: background 0.1s ease;
+    }
+
+    .file-item:last-child {
+      border-bottom: none;
+    }
+
+    .file-item:hover {
+      background: #454D5C;
+    }
+
+    .file-name {
+      color: #D1D8E0;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+      font-size: 11px;
+    }
+
+    .file-status {
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      margin-left: 12px;
+    }
+
+    .file-status.downloading {
+      background: #2F3D52;
+      color: #A8C7F0;
+    }
+
+    .file-status.formatting {
+      background: #4A4020;
+      color: #F5D89A;
+    }
+
+    .file-status.done {
+      background: #2D4438;
+      color: #B3E6CC;
+    }
+
+    .file-status.failed {
+      background: #4A2F35;
+      color: #FFB0B0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>wa-code</h1>
+      <p class="subtitle">WhatsApp Web Resource Downloader</p>
+    </header>
+
+    <div class="warning">
+      <strong>Important:</strong> Wait for WhatsApp Web to fully load before scanning. All JavaScript resources must be loaded for complete extraction.
+    </div>
+
+    <div class="controls">
+      <button id="scanBtn" class="btn btn-primary">Scan Resources</button>
+      <button id="downloadBtn" class="btn btn-primary" disabled>Download</button>
+      <div class="checkbox-container">
+        <input type="checkbox" id="formatCheckbox" checked>
+        <label for="formatCheckbox">Format code</label>
+      </div>
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <div id="progressContainer" class="progress-container">
+      <div class="progress-bar">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+      <div class="progress-stats">
+        <span><span class="stat-label">Total:</span><span id="totalCount" class="stat-value">0</span></span>
+        <span><span class="stat-label">Success:</span><span id="successCount" class="stat-value">0</span></span>
+        <span><span class="stat-label">Errors:</span><span id="errorCount" class="stat-value">0</span></span>
+      </div>
+    </div>
+
+    <div id="fileList" class="file-list"></div>
+  </div>
+
+  <script src="src/options.ts" type="module"></script>
+</body>
+</html>

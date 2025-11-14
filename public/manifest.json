@@ -3,7 +3,7 @@
   "name": "wa-code",
   "version": "1.0.0",
   "description": "Download minified JavaScript resources from WhatsApp Web",
-  "permissions": ["activeTab"],
+  "permissions": ["activeTab", "storage", "tabs"],
   "host_permissions": [
     "https://web.whatsapp.com/*",
     "https://*.whatsapp.net/*"
@@ -16,6 +16,7 @@
       "128": "icons/icon128.png"
     }
   },
+  "options_page": "options.html",
   "background": {
     "service_worker": "src/background.ts",
     "type": "module"

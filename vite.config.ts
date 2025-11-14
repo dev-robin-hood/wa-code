@@ -19,7 +19,27 @@ import { crx } from '@crxjs/vite-plugin';
 import manifest from './public/manifest.json';
 
 export default defineConfig({
-  plugins: [
-    crx({ manifest }),
-  ],
+  plugins: [crx({ manifest })],
+
+  worker: {
+    format: 'es',
+    plugins: () => [],
+  },
+
+  build: {
+    target: 'ES2020',
+    rollupOptions: {
+      output: {
+        manualChunks: (id: string): string | undefined => {
+          if (id.includes('prettier.worker')) {
+            return 'prettier-worker';
+          }
+          if (id.includes('prettier/')) {
+            return 'prettier';
+          }
+          return undefined;
+        },
+      },
+    },
+  },
 });
