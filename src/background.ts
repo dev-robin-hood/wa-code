@@ -14,6 +14,21 @@
  * limitations under the License.
  */
 
+import { MessageAction, OpenOptionsMessage } from './types/messages.js';
+
 chrome.runtime.onInstalled.addListener(() => {
   console.log('wa-code extension installed successfully');
 });
+
+chrome.runtime.onMessage.addListener(
+  (message: OpenOptionsMessage): boolean => {
+    if (message.action === MessageAction.OPEN_OPTIONS) {
+      chrome.storage.session.set({ pendingUrls: message.urls }).then(() => {
+        chrome.runtime.openOptionsPage();
+      });
+      return true;
+    }
+
+    return false;
+  }
+);

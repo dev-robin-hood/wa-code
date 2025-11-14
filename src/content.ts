@@ -14,41 +14,45 @@
  * limitations under the License.
  */
 
-import { MessageAction, ContentMessage } from './types/messages.js';
+import {
+  MessageAction,
+  ScanResourcesMessage,
+  ResourcesFoundMessage,
+  OpenOptionsMessage,
+} from './types/messages.js';
 import { ResourceScanner } from './services/ResourceScanner.js';
-import { ResourceDownloader } from './services/ResourceDownloader.js';
-import { ZipBuilder } from './services/ZipBuilder.js';
-import { MessageBroker } from './services/MessageBroker.js';
-import { JSZipFactory } from './adapters/JSZipAdapter.js';
-import { DownloadOrchestrator } from './orchestrators/DownloadOrchestrator.js';
+import { InjectedButton } from './components/InjectedButton.js';
 
 console.log('wa-code content script loaded');
 
+const scanner = new ResourceScanner(document);
+const button = new InjectedButton(handleButtonClick);
+
+button.inject();
+
 chrome.runtime.onMessage.addListener(
-  (message: ContentMessage, _sender, sendResponse) => {
-    console.log('wa-code received message:', message);
-    if (message.action === MessageAction.START_DOWNLOAD) {
-      handleDownloadRequest();
-      sendResponse({ status: 'started' });
+  (message: ScanResourcesMessage, _sender, sendResponse) => {
+    if (message.action === MessageAction.SCAN_RESOURCES) {
+      const urls = scanner.scan();
+
+      const response: ResourcesFoundMessage = {
+        action: MessageAction.RESOURCES_FOUND,
+        urls,
+      };
+
+      sendResponse(response);
     }
     return true;
   }
 );
 
-function handleDownloadRequest(): void {
-  const scanner = new ResourceScanner(document);
-  const downloader = new ResourceDownloader();
-  const zipFactory = new JSZipFactory();
-  const zipLibrary = zipFactory.create();
-  const zipBuilder = new ZipBuilder(zipLibrary);
-  const messageBroker = new MessageBroker(chrome.runtime);
+function handleButtonClick(): void {
+  const urls = scanner.scan();
 
-  const orchestrator = new DownloadOrchestrator(
-    scanner,
-    downloader,
-    zipBuilder,
-    messageBroker
-  );
+  const openOptionsMessage: OpenOptionsMessage = {
+    action: MessageAction.OPEN_OPTIONS,
+    urls,
+  };
 
-  orchestrator.execute();
+  chrome.runtime.sendMessage(openOptionsMessage);
 }
