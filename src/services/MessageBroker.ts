@@ -19,12 +19,25 @@ import {
   UpdateProgressMessage,
   DownloadCompleteMessage,
   DownloadErrorMessage,
+  FileStatusUpdateMessage,
+  FileStatus,
 } from '../types/messages.js';
 import { DownloadProgress, DownloadStatistics } from '../types/download.js';
 import { IMessageBroker } from '../interfaces/IMessageBroker.js';
 
 export class MessageBroker implements IMessageBroker {
   constructor(private readonly runtime: typeof chrome.runtime) {}
+
+  sendFileStatus(url: string, filename: string, status: FileStatus): void {
+    const message: FileStatusUpdateMessage = {
+      action: MessageAction.FILE_STATUS_UPDATE,
+      url,
+      filename,
+      status,
+    };
+
+    this.runtime.sendMessage(message);
+  }
 
   sendProgress(progress: DownloadProgress, info: string): void {
     const message: UpdateProgressMessage = {

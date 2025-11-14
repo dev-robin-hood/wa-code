@@ -15,19 +15,51 @@
  */
 
 import { DownloadResult, DownloadError } from '../types/download.js';
-import { IResourceDownloader } from '../interfaces/IResourceDownloader.js';
+import { IResourceDownloader, DownloadProgressCallback } from '../interfaces/IResourceDownloader.js';
+import { ICodeFormatter } from '../interfaces/ICodeFormatter.js';
+import { DEFAULT_FORMATTING_OPTIONS } from '../types/formatting.js';
 
 export class ResourceDownloader implements IResourceDownloader {
   private readonly filenameRegistry = new Map<string, number>();
 
-  async download(url: string): Promise<DownloadResult> {
+  constructor(private readonly codeFormatter: ICodeFormatter) {}
+
+  async download(
+    url: string,
+    shouldFormat: boolean,
+    onProgress?: DownloadProgressCallback
+  ): Promise<DownloadResult & { wasFormatted: boolean }> {
     this.validateUrl(url);
 
+    onProgress?.('downloading');
     const response = await this.fetchResource(url);
-    const blob = await response.blob();
+
+    const { blob, wasFormatted } = await this.processBlob(response, shouldFormat, onProgress);
     const filename = this.generateUniqueFilename(url);
 
-    return { blob, filename };
+    return { blob, filename, wasFormatted };
+  }
+
+  private async processBlob(
+    response: Response,
+    shouldFormat: boolean,
+    onProgress?: DownloadProgressCallback
+  ): Promise<{ blob: Blob; wasFormatted: boolean }> {
+    const originalBlob = await response.blob();
+
+    if (!shouldFormat) {
+      return { blob: originalBlob, wasFormatted: false };
+    }
+
+    onProgress?.('formatting');
+    const code = await originalBlob.text();
+    const formatted = await this.codeFormatter.format(code, {
+      ...DEFAULT_FORMATTING_OPTIONS,
+      enabled: true,
+    });
+
+    const blob = new Blob([formatted], { type: 'application/javascript' });
+    return { blob, wasFormatted: true };
   }
 
   private validateUrl(url: string): void {
