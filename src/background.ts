@@ -14,21 +14,31 @@
  * limitations under the License.
  */
 
-import { MessageAction, OpenOptionsMessage } from './types/messages.js';
+import {
+  MessageAction,
+  OpenOptionsMessage,
+  ExtensionMessage,
+} from "./types/messages.js";
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('wa-code extension installed successfully');
+  console.log("wa-code extension installed successfully");
 });
 
-chrome.runtime.onMessage.addListener(
-  (message: OpenOptionsMessage): boolean => {
-    if (message.action === MessageAction.OPEN_OPTIONS) {
-      chrome.storage.session.set({ pendingUrls: message.urls }).then(() => {
-        chrome.runtime.openOptionsPage();
-      });
-      return true;
-    }
+chrome.runtime.onMessage.addListener((message: ExtensionMessage): boolean => {
+  console.log("[wa-code background] Received message:", message.action);
 
-    return false;
+  if (message.action === MessageAction.OPEN_OPTIONS) {
+    const openMessage = message as OpenOptionsMessage;
+    chrome.storage.session.set({ pendingUrls: openMessage.urls }).then(() => {
+      chrome.runtime.openOptionsPage();
+    });
+    return true;
   }
-);
+
+  if (message.action === MessageAction.OPEN_OPTIONS_PAGE) {
+    chrome.runtime.openOptionsPage();
+    return true;
+  }
+
+  return false;
+});
