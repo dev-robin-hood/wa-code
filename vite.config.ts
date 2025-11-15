@@ -29,7 +29,16 @@ export default defineConfig({
   build: {
     target: 'ES2020',
     rollupOptions: {
+      input: {
+        injected: 'src/injected.ts',
+      },
       output: {
+        entryFileNames: (chunkInfo) => {
+          if (chunkInfo.name === 'injected') {
+            return 'injected.js';
+          }
+          return 'src/[name]-[hash].js';
+        },
         manualChunks: (id: string): string | undefined => {
           if (id.includes('prettier.worker')) {
             return 'prettier-worker';
