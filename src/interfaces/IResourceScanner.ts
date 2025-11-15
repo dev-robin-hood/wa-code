@@ -15,5 +15,5 @@
  */
 
 export interface IResourceScanner {
-  scan(): ReadonlyArray<string>;
+  scan(): ReadonlyArray<string> | Promise<ReadonlyArray<string>>;
 }
