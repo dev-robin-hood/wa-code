@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import { WorkerPoolManager } from './workers/WorkerPoolManager.js';
-import { JSZipFactory } from './adapters/JSZipAdapter.js';
-import { truncateFilename } from './utils/stringUtils.js';
-import { WorkerCodeFormatter } from './services/WorkerCodeFormatter.js';
-import { OptionsMessageBroker } from './services/OptionsMessageBroker.js';
-import { PreferencesManager } from './services/PreferencesManager.js';
-import { ResourceDownloader } from './services/ResourceDownloader.js';
-import { ZipBuilder } from './services/ZipBuilder.js';
-import { DownloadOrchestrator } from './orchestrators/DownloadOrchestrator.js';
-import { IResourceScanner } from './interfaces/IResourceScanner.js';
-import { DEFAULT_FORMATTING_OPTIONS } from './types/formatting.js';
+import { WorkerPoolManager } from './core/workers/WorkerPoolManager.js';
+import { JSZipFactory } from './core/adapters/JSZipAdapter.js';
+import { truncateFilename } from './core/utils/stringUtils.js';
+import { WorkerCodeFormatter } from './core/services/WorkerCodeFormatter.js';
+import { OptionsMessageBroker } from './core/services/OptionsMessageBroker.js';
+import { PreferencesManager } from './core/services/PreferencesManager.js';
+import { ResourceDownloader } from './core/services/ResourceDownloader.js';
+import { ZipBuilder } from './core/services/ZipBuilder.js';
+import { DownloadOrchestrator } from './core/orchestrators/DownloadOrchestrator.js';
+import { IResourceScanner } from './core/interfaces/IResourceScanner.js';
+import { DEFAULT_FORMATTING_OPTIONS } from './core/types/formatting.js';
 
 interface FileItem {
   url: string;

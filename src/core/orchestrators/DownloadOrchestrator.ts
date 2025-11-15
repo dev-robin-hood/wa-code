@@ -169,7 +169,17 @@ export class DownloadOrchestrator {
   private extractFilenameFromUrl(url: string): string {
     try {
       const urlObject = new URL(url);
-      const pathSegments = urlObject.pathname.split('/');
+      const pathname = urlObject.pathname;
+
+      if (pathname.endsWith('/pdf-worker/')) {
+        return 'pdf-worker.js';
+      }
+
+      if (pathname.endsWith('/init_script/')) {
+        return 'init-script.js';
+      }
+
+      const pathSegments = pathname.split('/').filter(s => s.length > 0);
       return pathSegments[pathSegments.length - 1] || 'unknown';
     } catch {
       return 'unknown';
