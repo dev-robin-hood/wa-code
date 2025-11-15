@@ -23,6 +23,7 @@ export const enum MessageAction {
   DOWNLOAD_ERROR = 'DOWNLOAD_ERROR',
   FILE_STATUS_UPDATE = 'FILE_STATUS_UPDATE',
   OPEN_OPTIONS = 'OPEN_OPTIONS',
+  OPEN_OPTIONS_PAGE = 'OPEN_OPTIONS_PAGE',
 }
 
 export type FileStatus = 'downloading' | 'formatting' | 'done' | 'failed';
@@ -68,8 +69,10 @@ export interface OpenOptionsMessage extends BaseMessage<MessageAction.OPEN_OPTIO
   readonly urls: readonly string[];
 }
 
+export interface OpenOptionsPageMessage extends BaseMessage<MessageAction.OPEN_OPTIONS_PAGE> {}
+
 export type ContentMessage = ScanResourcesMessage | ResourcesFoundMessage;
-export type BackgroundMessage = OpenOptionsMessage;
+export type BackgroundMessage = OpenOptionsMessage | OpenOptionsPageMessage;
 
 export type PopupMessage =
   | UpdateProgressMessage
@@ -77,4 +80,4 @@ export type PopupMessage =
   | DownloadErrorMessage
   | FileStatusUpdateMessage;
 
-export type ExtensionMessage = ContentMessage | PopupMessage;
+export type ExtensionMessage = ContentMessage | PopupMessage | BackgroundMessage;
