@@ -35,7 +35,29 @@ npm run build
 
 ## What it does
 
-Scans WhatsApp Web for JavaScript resources matching `static.whatsapp.net/rsrc.php/v4*`, downloads them, and packages everything into a compressed ZIP file.
+Scans WhatsApp Web for JavaScript resources matching `static.whatsapp.net/rsrc.php/*.js`, downloads them, and packages everything into a compressed ZIP file.
+
+## Why Bootloader instead of DOM parsing
+
+WhatsApp Web uses Facebook's Bootloader module to manage resource loading. The extension accesses `window.require('Bootloader').getURLToHashMap()` instead of parsing `<script>` tags from the DOM for several technical reasons:
+
+**Complete resource discovery**
+
+The Bootloader maintains a comprehensive registry of all JavaScript modules loaded by the application, including those loaded dynamically after the initial page load. DOM parsing with `document.querySelectorAll('script[src]')` only captures scripts present in the HTML at the time of query, missing modules loaded asynchronously through code splitting, lazy loading, or dynamic imports.
+
+**Internal module tracking**
+
+WhatsApp Web loads modules on demand based on user interactions and application state. The Bootloader tracks these internal dependencies and their corresponding URLs in a centralized Map structure. This internal registry is authoritative, whereas the DOM only reflects what has been injected into the page tree at any given moment.
+
+**Deduplication and versioning**
+
+The Bootloader's URL to hash mapping ensures each unique module is represented once, with its content hash serving as a cache key. Scanning the DOM can encounter duplicate script references or miss versioned variants that share the same logical module but have different hashes due to updates.
+
+**Timing independence**
+
+Accessing the Bootloader's Map is synchronous once the module system is initialized. DOM-based scanning is subject to timing issues, as scripts may not be rendered into the tree immediately even after their code has executed. The Bootloader provides a stable, race-condition-free source of truth.
+
+The extension implements a stabilization mechanism that polls the Bootloader every 3 seconds until the resource count stabilizes, ensuring all dynamically loaded modules are captured before initiating the download process.
 
 ## License
 
