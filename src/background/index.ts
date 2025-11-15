@@ -18,7 +18,7 @@ import {
   MessageAction,
   OpenOptionsMessage,
   ExtensionMessage,
-} from "./types/messages.js";
+} from "../core/types/messages.js";
 
 chrome.runtime.onInstalled.addListener(() => {
   console.log("wa-code extension installed successfully");
