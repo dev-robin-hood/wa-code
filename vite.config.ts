@@ -30,7 +30,7 @@ export default defineConfig({
     target: 'ES2020',
     rollupOptions: {
       input: {
-        injected: 'src/injected.ts',
+        injected: 'src/injected-script/index.ts',
       },
       output: {
         entryFileNames: (chunkInfo) => {

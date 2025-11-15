@@ -18,13 +18,13 @@
   },
   "options_page": "options.html",
   "background": {
-    "service_worker": "src/background.ts",
+    "service_worker": "src/background/index.ts",
     "type": "module"
   },
   "content_scripts": [
     {
       "matches": ["https://web.whatsapp.com/*"],
-      "js": ["src/content.ts"],
+      "js": ["src/content-script/index.ts"],
       "run_at": "document_idle"
     }
   ],
