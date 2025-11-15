@@ -15,7 +15,6 @@
  */
 
 import { WorkerPoolManager } from './workers/WorkerPoolManager.js';
-import { MessageAction, ScanResourcesMessage } from './types/messages.js';
 import { JSZipFactory } from './adapters/JSZipAdapter.js';
 import { truncateFilename } from './utils/stringUtils.js';
 import { WorkerCodeFormatter } from './services/WorkerCodeFormatter.js';
@@ -35,10 +34,11 @@ interface FileItem {
 }
 
 class OptionsController {
-  private readonly scanBtn: HTMLButtonElement;
   private readonly downloadBtn: HTMLButtonElement;
   private readonly formatCheckbox: HTMLInputElement;
   private readonly statusElement: HTMLElement;
+  private readonly noResourcesWarning: HTMLElement;
+  private readonly resourcesInfo: HTMLElement;
   private readonly progressContainer: HTMLElement;
   private readonly progressFill: HTMLElement;
   private readonly totalCount: HTMLElement;
@@ -52,10 +52,11 @@ class OptionsController {
   private readonly preferencesManager = new PreferencesManager();
 
   constructor() {
-    this.scanBtn = this.getElement('scanBtn') as HTMLButtonElement;
     this.downloadBtn = this.getElement('downloadBtn') as HTMLButtonElement;
     this.formatCheckbox = this.getElement('formatCheckbox') as HTMLInputElement;
     this.statusElement = this.getElement('status');
+    this.noResourcesWarning = this.getElement('noResourcesWarning');
+    this.resourcesInfo = this.getElement('resourcesInfo');
     this.progressContainer = this.getElement('progressContainer');
     this.progressFill = this.getElement('progressFill');
     this.totalCount = this.getElement('totalCount');
@@ -75,7 +76,6 @@ class OptionsController {
   }
 
   private async initialize(): Promise<void> {
-    this.scanBtn.addEventListener('click', () => this.handleScan());
     this.downloadBtn.addEventListener('click', () => this.handleDownload());
 
     const preferences = await this.preferencesManager.getFormattingPreferences();
@@ -87,22 +87,40 @@ class OptionsController {
       });
     });
 
+    chrome.storage.onChanged.addListener((changes, areaName) => {
+      if (areaName === 'local' && changes.scannedUrls) {
+        this.loadResourcesFromStorage();
+      }
+    });
+
     this.initializeWorkerPool();
+    await this.loadResourcesFromStorage();
     await this.checkPendingUrls();
+  }
+
+  private async loadResourcesFromStorage(): Promise<void> {
+    const result = await chrome.storage.local.get('scannedUrls');
+
+    if (result.scannedUrls && Array.isArray(result.scannedUrls) && result.scannedUrls.length > 0) {
+      this.scannedUrls = result.scannedUrls;
+      this.downloadBtn.disabled = false;
+      this.noResourcesWarning.style.display = 'none';
+      this.resourcesInfo.style.display = 'block';
+      this.resourcesInfo.textContent = `${this.scannedUrls.length} JavaScript resources ready to download`;
+    } else {
+      this.scannedUrls = [];
+      this.downloadBtn.disabled = true;
+      this.noResourcesWarning.style.display = 'block';
+      this.resourcesInfo.style.display = 'none';
+    }
   }
 
   private async checkPendingUrls(): Promise<void> {
     const result = await chrome.storage.session.get('pendingUrls');
 
     if (result.pendingUrls && Array.isArray(result.pendingUrls)) {
-      this.scannedUrls = result.pendingUrls;
+      await chrome.storage.local.set({ scannedUrls: result.pendingUrls });
       await chrome.storage.session.remove('pendingUrls');
-
-      this.downloadBtn.disabled = false;
-      this.showStatus(
-        `Found ${this.scannedUrls.length} JavaScript resources from WhatsApp Web`,
-        'success'
-      );
     }
   }
 
@@ -117,64 +135,6 @@ class OptionsController {
     }
   }
 
-  private async handleScan(): Promise<void> {
-    this.scanBtn.disabled = true;
-    this.showStatus('Scanning for JavaScript resources...', 'info');
-
-    try {
-      const tabs = await chrome.tabs.query({ url: 'https://web.whatsapp.com/*' });
-
-      if (tabs.length === 0) {
-        this.showStatus(
-          'Please open WhatsApp Web in a tab first',
-          'error'
-        );
-        this.scanBtn.disabled = false;
-        return;
-      }
-
-      const whatsappTab = tabs[0];
-
-      if (!whatsappTab.id) {
-        this.showStatus('Unable to identify WhatsApp tab', 'error');
-        this.scanBtn.disabled = false;
-        return;
-      }
-
-      const message: ScanResourcesMessage = {
-        action: MessageAction.SCAN_RESOURCES,
-      };
-
-      try {
-        const response = await chrome.tabs.sendMessage(whatsappTab.id, message);
-
-        if (response && response.urls) {
-          this.scannedUrls = response.urls;
-          this.downloadBtn.disabled = false;
-          this.showStatus(
-            `Found ${this.scannedUrls.length} JavaScript resources`,
-            'success'
-          );
-        } else {
-          this.showStatus('No resources found', 'error');
-        }
-      } catch (messageError) {
-        console.error('Message error:', messageError);
-        this.showStatus(
-          'Extension not loaded on WhatsApp Web. Please refresh the WhatsApp Web page and try again.',
-          'error'
-        );
-      }
-    } catch (error) {
-      console.error('Scan failed:', error);
-      this.showStatus(
-        error instanceof Error ? error.message : 'Scan failed',
-        'error'
-      );
-    } finally {
-      this.scanBtn.disabled = false;
-    }
-  }
 
   private async handleDownload(): Promise<void> {
     if (this.scannedUrls.length === 0) {
@@ -183,7 +143,6 @@ class OptionsController {
     }
 
     this.downloadBtn.disabled = true;
-    this.scanBtn.disabled = true;
     this.progressContainer.classList.add('active');
     this.fileList.classList.add('active');
     this.fileItems.clear();
@@ -192,7 +151,6 @@ class OptionsController {
     if (!this.workerPool) {
       this.showStatus('Worker pool not initialized', 'error');
       this.downloadBtn.disabled = false;
-      this.scanBtn.disabled = false;
       return;
     }
 
@@ -239,7 +197,6 @@ class OptionsController {
       );
     } finally {
       this.downloadBtn.disabled = false;
-      this.scanBtn.disabled = false;
     }
   }
 
@@ -337,6 +294,7 @@ class OptionsController {
     this.statusElement.textContent = message;
     this.statusElement.className = `status ${type} active`;
   }
+
 }
 
 new OptionsController();

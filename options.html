@@ -65,6 +65,7 @@
       color: #FFE4B3;
     }
 
+
     .controls {
       display: flex;
       gap: 12px;
@@ -299,13 +300,14 @@
       <p class="subtitle">WhatsApp Web Resource Downloader</p>
     </header>
 
-    <div class="warning">
-      <strong>Important:</strong> Wait for WhatsApp Web to fully load before scanning. All JavaScript resources must be loaded for complete extraction.
+    <div id="noResourcesWarning" class="warning" style="display: none;">
+      <strong>No resources detected.</strong> Please open <a href="https://web.whatsapp.com" target="_blank" style="color: #FFE4B3; text-decoration: underline;">WhatsApp Web</a> in another tab and wait for it to fully load.
     </div>
 
+    <div id="resourcesInfo" class="status info" style="display: none;"></div>
+
     <div class="controls">
-      <button id="scanBtn" class="btn btn-primary">Scan Resources</button>
-      <button id="downloadBtn" class="btn btn-primary" disabled>Download</button>
+      <button id="downloadBtn" class="btn btn-primary" disabled>Download Resources</button>
       <div class="checkbox-container">
         <input type="checkbox" id="formatCheckbox" checked>
         <label for="formatCheckbox">Format code</label>
