@@ -51,7 +51,7 @@ export class DownloadOrchestrator {
       'Scanning for JavaScript resources...'
     );
 
-    const resources = this.scanner.scan();
+    const resources = await this.scanner.scan();
     const total = resources.length;
 
     let completedCount = 0;
