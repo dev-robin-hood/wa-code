@@ -29,13 +29,14 @@ npm run build
 
 1. Navigate to [web.whatsapp.com](https://web.whatsapp.com)
 2. Wait for page to load completely
-3. Click the wa-code extension icon
-4. Click "Start Download"
-5. The minified JavaScript files will be downloaded as a ZIP archive
+3. Resources are automatically detected and saved
+4. A notification appears when detection is complete
+5. Click the notification or wait for automatic redirect to the options page
+6. Click "Download Resources" to package all files into a ZIP archive
 
 ## What it does
 
-Scans WhatsApp Web for JavaScript resources matching `static.whatsapp.net/rsrc.php/*.js`, downloads them, and packages everything into a compressed ZIP file.
+Automatically detects JavaScript resources from WhatsApp Web's Bootloader module, monitors for resource stabilization, and packages all discovered files matching `static.whatsapp.net/rsrc.php/*.js` into a compressed ZIP archive with optional code formatting.
 
 ## Why Bootloader instead of DOM parsing
 
