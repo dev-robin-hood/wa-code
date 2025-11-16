@@ -21,6 +21,7 @@ import { InlineScriptExtraction } from '../stages/extraction/InlineScriptExtract
 import { FixedResourcesExtraction } from '../stages/extraction/FixedResourcesExtraction.js';
 import { StabilizationStage } from '../stages/processing/StabilizationStage.js';
 import { DeduplicationStage } from '../stages/processing/DeduplicationStage.js';
+import { ValidationStage } from '../stages/processing/ValidationStage.js';
 
 export class PipelineFactory {
   createBootloaderPipeline(): ScanPipeline {
@@ -38,7 +39,7 @@ export class PipelineFactory {
     const extraction = new InlineScriptExtraction();
     const stabilization = new StabilizationStage(extraction, { delayMs: 3000, maxRetries: 10 });
 
-    return new ScanPipeline([stabilization, new DeduplicationStage()]);
+    return new ScanPipeline([stabilization, new DeduplicationStage(), new ValidationStage()]);
   }
 
   createFixedResourcesPipeline(): ScanPipeline {
