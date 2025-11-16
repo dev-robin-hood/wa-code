@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-import { PipelineFactory } from './pipelines/PipelineFactory.js';
-import { Logger } from '../core/services/Logger.js';
+import { PipelineFactory } from "./pipelines/PipelineFactory.js";
+import { Logger } from "../core/services/Logger.js";
 
 export class ScanCoordinator {
   private readonly pipelineFactory = new PipelineFactory();
-  private readonly logger = new Logger('ScanCoordinator');
+  private readonly logger = new Logger("ScanCoordinator");
 
   async scanAll(includeStatic: boolean): Promise<string[]> {
     const bootloaderUrls = await this.scanBootloader();
     this.logger.info(`Bootloader: ${bootloaderUrls.length} URLs`);
 
     if (!includeStatic) {
-      this.logger.debug('Skipping static resources (re-scan)');
+      this.logger.debug("Skipping static resources (re-scan)");
       return bootloaderUrls;
     }
 
@@ -38,11 +38,13 @@ export class ScanCoordinator {
 
     const duplicatesRemoved = allUrls.length - uniqueUrls.length;
     this.logger.info(
-      `Total: ${uniqueUrls.length} unique (${duplicatesRemoved} duplicates removed)`
+      `Total: ${uniqueUrls.length} unique (${duplicatesRemoved} duplicates removed)`,
     );
 
     if (uniqueUrls.length === 0) {
-      throw new Error('No JavaScript resources found matching the required pattern');
+      throw new Error(
+        "No JavaScript resources found matching the required pattern",
+      );
     }
 
     return uniqueUrls;
