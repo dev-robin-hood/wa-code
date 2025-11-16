@@ -16,11 +16,13 @@
 
 import { IPreferencesManager } from '../interfaces/IPreferencesManager.js';
 import { FormattingPreferences, STORAGE_KEY_FORMATTING } from '../types/formatting.js';
+import { Logger } from './Logger.js';
 
 export class PreferencesManager implements IPreferencesManager {
   private readonly DEFAULT_PREFERENCES: FormattingPreferences = {
     shouldFormat: false,
   } as const;
+  private readonly logger = new Logger('PreferencesManager');
 
   async getFormattingPreferences(): Promise<FormattingPreferences> {
     try {
@@ -37,7 +39,7 @@ export class PreferencesManager implements IPreferencesManager {
         [STORAGE_KEY_FORMATTING]: preferences,
       });
     } catch (error) {
-      console.warn('Failed to save formatting preferences:', error);
+      this.logger.warn('Failed to save formatting preferences', error);
     }
   }
 
