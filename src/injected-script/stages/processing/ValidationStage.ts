@@ -22,7 +22,13 @@ const JS_EXTENSION = '.js';
 
 export class ValidationStage implements IScanStage {
   async execute(context: ScanContext): Promise<ScanContext> {
-    const validUrls = context.urls.filter((url) => this.isValidJavaScriptResource(url));
+    const blacklistedUrls = this.getBlacklistedUrls(context);
+    const blacklistSet = new Set(blacklistedUrls);
+
+    const validUrls = context.urls.filter(
+      (url) => this.isValidJavaScriptResource(url) && !blacklistSet.has(url)
+    );
+
     return context.withUrls(validUrls);
   }
 
@@ -32,5 +38,15 @@ export class ValidationStage implements IScanStage {
     }
 
     return url.startsWith(TARGET_HOST) && url.includes(JS_EXTENSION);
+  }
+
+  private getBlacklistedUrls(context: ScanContext): string[] {
+    const blacklisted = context.metadata['blacklistedUrls'];
+
+    if (!blacklisted || !Array.isArray(blacklisted)) {
+      return [];
+    }
+
+    return blacklisted as string[];
   }
 }
