@@ -19,13 +19,16 @@ import {
   OpenOptionsMessage,
   ExtensionMessage,
 } from "../core/types/messages.js";
+import { Logger } from "../core/services/Logger.js";
+
+const logger = new Logger('Background');
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.log("wa-code extension installed successfully");
+  logger.info("Extension installed successfully");
 });
 
 chrome.runtime.onMessage.addListener((message: ExtensionMessage): boolean => {
-  console.log("[wa-code background] Received message:", message.action);
+  logger.debug(`Received message: ${message.action}`);
 
   if (message.action === MessageAction.OPEN_OPTIONS) {
     const openMessage = message as OpenOptionsMessage;
