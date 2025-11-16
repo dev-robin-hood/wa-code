@@ -14,20 +14,23 @@
  * limitations under the License.
  */
 
-import { InjectedBridge } from './InjectedBridge.js';
-import { SuccessNotification } from './ui/SuccessNotification.js';
-import { MessageAction, OpenOptionsPageMessage } from '../core/types/messages.js';
-import { Logger } from '../core/services/Logger.js';
+import { InjectedBridge } from "./InjectedBridge.js";
+import { ScanNotification } from "./ui/ScanNotification.js";
+import {
+  MessageAction,
+  OpenOptionsPageMessage,
+} from "../core/types/messages.js";
+import { Logger } from "../core/services/Logger.js";
 
 export class ContentOrchestrator {
   private readonly bridge: InjectedBridge;
-  private readonly notification: SuccessNotification;
+  private readonly notification: ScanNotification;
   private readonly stabilityDelayMs: number;
-  private readonly logger = new Logger('ContentOrchestrator');
+  private readonly logger = new Logger("ContentOrchestrator");
 
   constructor(stabilityDelayMs: number = 3000) {
     this.bridge = new InjectedBridge();
-    this.notification = new SuccessNotification();
+    this.notification = new ScanNotification();
     this.stabilityDelayMs = stabilityDelayMs;
   }
 
@@ -38,32 +41,34 @@ export class ContentOrchestrator {
   }
 
   async handleManualScan(): Promise<string[]> {
-    this.logger.info('Starting manual scan');
+    this.logger.info("Starting manual scan");
     const urls = await this.bridge.requestScan();
     this.logger.info(`Found ${urls.length} JavaScript resources`);
     return urls;
   }
 
   private injectPageScript(): void {
-    const script = document.createElement('script');
-    script.type = 'module';
-    script.src = chrome.runtime.getURL('injected.js');
+    const script = document.createElement("script");
+    script.type = "module";
+    script.src = chrome.runtime.getURL("injected.js");
     (document.head || document.documentElement).appendChild(script);
   }
 
   private async autoScanAndStore(): Promise<void> {
     try {
-      this.logger.info('Auto-scanning resources with stabilization');
+      this.notification.showLoading();
+      this.logger.info("Auto-scanning resources with stabilization");
       const urls = await this.scanUntilStable();
 
       this.logger.info(`Resources stabilized at ${urls.length} items`);
 
       await chrome.storage.local.set({ scannedUrls: urls });
-      this.logger.info('Resources saved to storage');
+      this.logger.info("Resources saved to storage");
 
       this.showSuccessNotification(urls.length);
     } catch (error) {
-      this.logger.error('Auto-scan failed', error);
+      this.logger.error("Auto-scan failed", error);
+      this.showErrorNotification(error);
     }
   }
 
@@ -72,25 +77,35 @@ export class ContentOrchestrator {
     let staticUrls: string[] = [];
 
     const firstScanUrls = await this.bridge.requestScan(true);
-    this.logger.info(`Initial scan found ${firstScanUrls.length} resources (with static)`);
+    this.logger.info(
+      `Initial scan found ${firstScanUrls.length} resources (with static)`,
+    );
 
     const firstBootloaderOnlyUrls = await this.bridge.requestScan(false);
     previousBootloaderCount = firstBootloaderOnlyUrls.length;
-    staticUrls = firstScanUrls.filter((url) => !firstBootloaderOnlyUrls.includes(url));
+    staticUrls = firstScanUrls.filter(
+      (url) => !firstBootloaderOnlyUrls.includes(url),
+    );
 
-    this.logger.info(`Extracted ${staticUrls.length} static URLs for preservation`);
+    this.logger.info(
+      `Extracted ${staticUrls.length} static URLs for preservation`,
+    );
 
     while (true) {
-      this.logger.debug(`Waiting ${this.stabilityDelayMs / 1000} seconds for stabilization`);
+      this.logger.debug(
+        `Waiting ${this.stabilityDelayMs / 1000} seconds for stabilization`,
+      );
       await this.sleep(this.stabilityDelayMs);
 
       const bootloaderUrls = await this.bridge.requestScan(false);
       const currentCount = bootloaderUrls.length;
 
-      this.logger.debug(`Scan iteration found ${currentCount} bootloader resources`);
+      this.logger.debug(
+        `Scan iteration found ${currentCount} bootloader resources`,
+      );
 
       if (currentCount === previousBootloaderCount) {
-        this.logger.info('Bootloader stable, merging with static resources');
+        this.logger.info("Bootloader stable, merging with static resources");
 
         const allUrls = [...bootloaderUrls, ...staticUrls];
         const uniqueUrls = [...new Set(allUrls)];
@@ -104,12 +119,20 @@ export class ContentOrchestrator {
   }
 
   private showSuccessNotification(count: number): void {
-    this.notification.show(count, () => {
+    this.notification.showSuccess(count, () => {
       const message: OpenOptionsPageMessage = {
         action: MessageAction.OPEN_OPTIONS_PAGE,
       };
       chrome.runtime.sendMessage(message);
     });
+  }
+
+  private showErrorNotification(error: unknown): void {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Failed to scan resources. Please refresh the page and try again.";
+    this.notification.showError(message);
   }
 
   private sleep(ms: number): Promise<void> {
