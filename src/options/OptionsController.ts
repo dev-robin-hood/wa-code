@@ -21,9 +21,11 @@ import { StatusDisplay } from './components/StatusDisplay.js';
 import { ResourceStateService } from './services/ResourceStateService.js';
 import { DownloadService } from './services/DownloadService.js';
 import { PreferencesManager } from '../core/services/PreferencesManager.js';
+import { Logger } from '../core/services/Logger.js';
 
 export class OptionsController {
   private isDownloading = false;
+  private readonly logger = new Logger('OptionsController');
 
   constructor(
     private readonly controlPanel: ControlPanel,
@@ -95,7 +97,7 @@ export class OptionsController {
         },
       });
     } catch (error) {
-      console.error('Download failed:', error);
+      this.logger.error('Download failed', error);
       this.statusDisplay.show(
         error instanceof Error ? error.message : 'Download failed',
         'error'

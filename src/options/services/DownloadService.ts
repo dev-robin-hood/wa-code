@@ -23,6 +23,7 @@ import { ZipBuilder } from '../../core/services/ZipBuilder.js';
 import { DownloadOrchestrator } from '../../core/orchestrators/DownloadOrchestrator.js';
 import { IResourceScanner } from '../../core/interfaces/IResourceScanner.js';
 import { DEFAULT_FORMATTING_OPTIONS } from '../../core/types/formatting.js';
+import { Logger } from '../../core/services/Logger.js';
 import type { FileStatus } from '../components/FileList.js';
 import type { StatusType } from '../components/StatusDisplay.js';
 
@@ -35,6 +36,7 @@ export interface DownloadCallbacks {
 
 export class DownloadService {
   private workerPool: WorkerPoolManager | null = null;
+  private readonly logger = new Logger('DownloadService');
 
   constructor() {
     this.initializeWorkerPool();
@@ -95,9 +97,9 @@ export class DownloadService {
     try {
       const workerCount = Math.min(30, navigator.hardwareConcurrency || 8);
       this.workerPool = new WorkerPoolManager(workerCount);
-      console.log(`Worker pool initialized with ${workerCount} workers`);
+      this.logger.info(`Worker pool initialized with ${workerCount} workers`);
     } catch (error) {
-      console.error('Failed to initialize worker pool:', error);
+      this.logger.error('Failed to initialize worker pool', error);
       throw error;
     }
   }

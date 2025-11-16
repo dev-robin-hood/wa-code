@@ -22,6 +22,9 @@ import { StatusDisplay } from './components/StatusDisplay.js';
 import { ResourceStateService } from './services/ResourceStateService.js';
 import { DownloadService } from './services/DownloadService.js';
 import { PreferencesManager } from '../core/services/PreferencesManager.js';
+import { Logger } from '../core/services/Logger.js';
+
+const logger = new Logger('OptionsPage');
 
 async function main(): Promise<void> {
   try {
@@ -51,7 +54,7 @@ async function main(): Promise<void> {
 
     await controller.initialize();
   } catch (error) {
-    console.error('Failed to initialize options page:', error);
+    logger.error('Failed to initialize options page', error);
   }
 }
 
