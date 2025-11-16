@@ -17,9 +17,11 @@
 import { IScanStage } from '../IScanStage.js';
 import { ScanContext } from '../ScanContext.js';
 import { UrlExtractor } from '../../parsers/UrlExtractor.js';
+import { DynamicScriptDetector } from '../../parsers/DynamicScriptDetector.js';
 
 export class InlineScriptExtraction implements IScanStage {
   private readonly urlExtractor = new UrlExtractor();
+  private readonly dynamicScriptDetector = new DynamicScriptDetector();
 
   async execute(context: ScanContext): Promise<ScanContext> {
     const scriptElements = document.querySelectorAll<HTMLScriptElement>(
@@ -35,10 +37,14 @@ export class InlineScriptExtraction implements IScanStage {
         return;
       }
 
+      this.dynamicScriptDetector.extractBlacklistedUrls(content);
+
       const extractedUrls = this.urlExtractor.extractFromText(content);
       urls.push(...extractedUrls);
     });
 
-    return context.mergeUrls(urls);
+    const blacklistedUrls = this.dynamicScriptDetector.getBlacklistedUrls();
+
+    return context.mergeUrls(urls).withMetadata('blacklistedUrls', blacklistedUrls);
   }
 }
