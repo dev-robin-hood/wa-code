@@ -15,28 +15,30 @@
  */
 
 import { PipelineFactory } from './pipelines/PipelineFactory.js';
+import { Logger } from '../core/services/Logger.js';
 
 export class ScanCoordinator {
   private readonly pipelineFactory = new PipelineFactory();
+  private readonly logger = new Logger('ScanCoordinator');
 
   async scanAll(includeStatic: boolean): Promise<string[]> {
     const bootloaderUrls = await this.scanBootloader();
-    console.log(`[ScanCoordinator] Bootloader: ${bootloaderUrls.length} URLs`);
+    this.logger.info(`Bootloader: ${bootloaderUrls.length} URLs`);
 
     if (!includeStatic) {
-      console.log('[ScanCoordinator] Skipping static resources (re-scan)');
+      this.logger.debug('Skipping static resources (re-scan)');
       return bootloaderUrls;
     }
 
     const staticUrls = await this.scanStaticResources();
-    console.log(`[ScanCoordinator] Static resources: ${staticUrls.length} URLs`);
+    this.logger.info(`Static resources: ${staticUrls.length} URLs`);
 
     const allUrls = [...bootloaderUrls, ...staticUrls];
     const uniqueUrls = [...new Set(allUrls)];
 
     const duplicatesRemoved = allUrls.length - uniqueUrls.length;
-    console.log(
-      `[ScanCoordinator] Total: ${uniqueUrls.length} unique (${duplicatesRemoved} duplicates removed)`
+    this.logger.info(
+      `Total: ${uniqueUrls.length} unique (${duplicatesRemoved} duplicates removed)`
     );
 
     if (uniqueUrls.length === 0) {

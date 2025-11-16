@@ -17,11 +17,13 @@
 import { IScanStage } from '../IScanStage.js';
 import { ScanContext } from '../ScanContext.js';
 import { UrlExtractor } from '../../parsers/UrlExtractor.js';
+import { Logger } from '../../../core/services/Logger.js';
 
 const SW_URL = 'https://web.whatsapp.com/sw.js';
 
 export class ServiceWorkerExtraction implements IScanStage {
   private readonly urlExtractor = new UrlExtractor();
+  private readonly logger = new Logger('ServiceWorkerExtraction');
 
   async execute(context: ScanContext): Promise<ScanContext> {
     try {
@@ -37,7 +39,7 @@ export class ServiceWorkerExtraction implements IScanStage {
       return context.mergeUrls(urls);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`[ServiceWorkerExtraction] Failed: ${message}`);
+      this.logger.error(`Failed: ${message}`, error);
       throw new Error(`Service Worker extraction failed: ${message}`);
     }
   }

@@ -15,6 +15,7 @@
  */
 
 import { ScanCoordinator } from './ScanCoordinator.js';
+import { Logger } from '../core/services/Logger.js';
 
 interface ScanRequest {
   type: 'WA_CODE_SCAN_REQUEST';
@@ -34,6 +35,7 @@ interface ScanResponseError {
 }
 
 const coordinator = new ScanCoordinator();
+const logger = new Logger('InjectedScript');
 
 window.addEventListener('message', async (event: MessageEvent<ScanRequest>) => {
   if (event.source !== window || event.data.type !== 'WA_CODE_SCAN_REQUEST') {
@@ -42,7 +44,7 @@ window.addEventListener('message', async (event: MessageEvent<ScanRequest>) => {
 
   const includeStatic = event.data.includeStatic ?? true;
 
-  console.log(`[wa-code injected] Received scan request (includeStatic: ${includeStatic})`);
+  logger.debug(`Received scan request (includeStatic: ${includeStatic})`);
 
   try {
     const urls = await coordinator.scanAll(includeStatic);
@@ -63,6 +65,6 @@ window.addEventListener('message', async (event: MessageEvent<ScanRequest>) => {
   }
 });
 
-console.log('[wa-code injected] Page script loaded and ready');
+logger.info('Page script loaded and ready');
 
 window.postMessage({ type: 'WA_CODE_INJECTED_READY' }, '*');
