@@ -25,8 +25,11 @@ interface ReadyMessage {
   type: 'WA_CODE_INJECTED_READY';
 }
 
+import { Logger } from '../core/services/Logger.js';
+
 export class InjectedBridge {
   private static readonly READY_TIMEOUT_MS = 30000;
+  private readonly logger = new Logger('InjectedBridge');
 
   async waitForReady(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -35,7 +38,7 @@ export class InjectedBridge {
           return;
         }
 
-        console.log('[InjectedBridge] Injected script is ready');
+        this.logger.info('Injected script is ready');
         window.removeEventListener('message', readyHandler);
         clearTimeout(timeout);
         resolve();

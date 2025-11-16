@@ -20,13 +20,16 @@ import {
   ResourcesFoundMessage,
 } from '../core/types/messages.js';
 import { ContentOrchestrator } from './ContentOrchestrator.js';
+import { Logger } from '../core/services/Logger.js';
 
-console.log('wa-code content script loaded');
+const logger = new Logger('ContentScript');
+
+logger.info('Content script loaded');
 
 const orchestrator = new ContentOrchestrator();
 
 orchestrator.initialize().catch((error) => {
-  console.error('[wa-code] Failed to initialize:', error);
+  logger.error('Failed to initialize', error);
 });
 
 chrome.runtime.onMessage.addListener(
@@ -52,7 +55,7 @@ async function handleScanRequest(
 
     sendResponse(response);
   } catch (error) {
-    console.error('[wa-code] Scan failed:', error);
+    logger.error('Scan failed', error);
     throw error;
   }
 }

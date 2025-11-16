@@ -17,11 +17,13 @@
 import { InjectedBridge } from './InjectedBridge.js';
 import { SuccessNotification } from './ui/SuccessNotification.js';
 import { MessageAction, OpenOptionsPageMessage } from '../core/types/messages.js';
+import { Logger } from '../core/services/Logger.js';
 
 export class ContentOrchestrator {
   private readonly bridge: InjectedBridge;
   private readonly notification: SuccessNotification;
   private readonly stabilityDelayMs: number;
+  private readonly logger = new Logger('ContentOrchestrator');
 
   constructor(stabilityDelayMs: number = 3000) {
     this.bridge = new InjectedBridge();
@@ -36,31 +38,32 @@ export class ContentOrchestrator {
   }
 
   async handleManualScan(): Promise<string[]> {
-    console.log('[ContentOrchestrator] Starting manual scan...');
+    this.logger.info('Starting manual scan');
     const urls = await this.bridge.requestScan();
-    console.log('[ContentOrchestrator] Found', urls.length, 'JavaScript resources');
+    this.logger.info(`Found ${urls.length} JavaScript resources`);
     return urls;
   }
 
   private injectPageScript(): void {
     const script = document.createElement('script');
+    script.type = 'module';
     script.src = chrome.runtime.getURL('injected.js');
     (document.head || document.documentElement).appendChild(script);
   }
 
   private async autoScanAndStore(): Promise<void> {
     try {
-      console.log('[ContentOrchestrator] Auto-scanning resources with stabilization...');
+      this.logger.info('Auto-scanning resources with stabilization');
       const urls = await this.scanUntilStable();
 
-      console.log('[ContentOrchestrator] Resources stabilized at', urls.length, 'items');
+      this.logger.info(`Resources stabilized at ${urls.length} items`);
 
       await chrome.storage.local.set({ scannedUrls: urls });
-      console.log('[ContentOrchestrator] Resources saved to storage');
+      this.logger.info('Resources saved to storage');
 
       this.showSuccessNotification(urls.length);
     } catch (error) {
-      console.error('[ContentOrchestrator] Auto-scan failed:', error);
+      this.logger.error('Auto-scan failed', error);
     }
   }
 
@@ -69,30 +72,30 @@ export class ContentOrchestrator {
     let staticUrls: string[] = [];
 
     const firstScanUrls = await this.bridge.requestScan(true);
-    console.log('[ContentOrchestrator] Initial scan: found', firstScanUrls.length, 'resources (with static)');
+    this.logger.info(`Initial scan found ${firstScanUrls.length} resources (with static)`);
 
     const firstBootloaderOnlyUrls = await this.bridge.requestScan(false);
     previousBootloaderCount = firstBootloaderOnlyUrls.length;
     staticUrls = firstScanUrls.filter((url) => !firstBootloaderOnlyUrls.includes(url));
 
-    console.log('[ContentOrchestrator] Extracted', staticUrls.length, 'static URLs for preservation');
+    this.logger.info(`Extracted ${staticUrls.length} static URLs for preservation`);
 
     while (true) {
-      console.log('[ContentOrchestrator] Waiting', this.stabilityDelayMs / 1000, 'seconds for stabilization...');
+      this.logger.debug(`Waiting ${this.stabilityDelayMs / 1000} seconds for stabilization`);
       await this.sleep(this.stabilityDelayMs);
 
       const bootloaderUrls = await this.bridge.requestScan(false);
       const currentCount = bootloaderUrls.length;
 
-      console.log('[ContentOrchestrator] Scan iteration: found', currentCount, 'bootloader resources');
+      this.logger.debug(`Scan iteration found ${currentCount} bootloader resources`);
 
       if (currentCount === previousBootloaderCount) {
-        console.log('[ContentOrchestrator] Bootloader stable, merging with static resources');
+        this.logger.info('Bootloader stable, merging with static resources');
 
         const allUrls = [...bootloaderUrls, ...staticUrls];
         const uniqueUrls = [...new Set(allUrls)];
 
-        console.log('[ContentOrchestrator] Final total:', uniqueUrls.length, 'unique resources');
+        this.logger.info(`Final total: ${uniqueUrls.length} unique resources`);
         return uniqueUrls;
       }
 
